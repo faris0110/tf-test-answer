@@ -120,6 +120,40 @@ public class EntryResource {
         if (entryDTO.getId() == null) {
             throw new BadRequestAlertException("Invalid id", ENTITY_NAME, "idnull");
         }
+
+        Optional<BlogDTO> blogDTO = blogService.findOne(entryDTO.getBlogId());
+
+        // Emoji Validation
+        if (blogDTO.get().isPositive()) {
+            switch (entryDTO.getEmoji()) {
+                case SAD: throw new BadRequestAlertException("Invalid Emoji", ENTITY_NAME, "invalidEmoji");
+                case ANGRY: throw new BadRequestAlertException("Invalid Emoji", ENTITY_NAME, "invalidEmoji");
+            }
+        }
+        else { // blog is negative
+            switch (entryDTO.getEmoji()) {
+                case HAHA: throw new BadRequestAlertException("Invalid Emoji", ENTITY_NAME, "invalidEmoji");
+                case LIKE: throw new BadRequestAlertException("Invalid Emoji", ENTITY_NAME, "invalidEmoji");
+            }
+
+        }
+
+        // Content Validation
+        List<String> positiveKeywords = Arrays.asList("Like", "Love", "Happy", "Haha", "Laugh", "Funny");
+        List<String> negativeKeywords = Arrays.asList("Angry", "Sad", "Fear", "Cry", "Lonely", "Hate");
+        if (blogDTO.get().isPositive()) {
+            for (String negativeKeyword: negativeKeywords) {
+                if (negativeKeyword.equalsIgnoreCase(entryDTO.getContent()))
+                    throw new BadRequestAlertException("Invalid Content", ENTITY_NAME, "invalidContent");
+            }
+        }
+        else { // blog is negative
+            for (String positiveKeyword: positiveKeywords) {
+                if (positiveKeyword.equalsIgnoreCase(entryDTO.getContent()))
+                    throw new BadRequestAlertException("Invalid Content", ENTITY_NAME, "invalidContent");
+            }
+        }
+
         EntryDTO result = entryService.save(entryDTO);
         return ResponseEntity.ok()
             .headers(HeaderUtil.createEntityUpdateAlert(applicationName, false, ENTITY_NAME, entryDTO.getId().toString()))
