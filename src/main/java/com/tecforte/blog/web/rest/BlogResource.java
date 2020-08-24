@@ -20,7 +20,6 @@ import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -130,9 +129,8 @@ public class BlogResource {
      *
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
-    @DeleteMapping("/blogs/clean")
-    public ResponseEntity<Void> cleanAllBlogEntries() {
-        List<String> keywords = Arrays.asList("Rubbish", "Hell");
+    @DeleteMapping(value = "/blogs/clean", params = {"keywords"})
+    public ResponseEntity<Void> cleanAllBlogEntries(@RequestParam(value = "keywords") List<String> keywords) {
         Page<EntryDTO> entryDTOS = entryService.findAll(Pageable.unpaged());
         for (EntryDTO entryDTO: entryDTOS) {
             for (String keyword: keywords) {
@@ -149,26 +147,15 @@ public class BlogResource {
      * @param id the id of the blogDTO to delete.
      * @return the {@link ResponseEntity} with status {@code 204 (NO_CONTENT)}.
      */
-    @DeleteMapping("/blogs/{id}/clean")
-    public ResponseEntity<Void> cleanBlogEntries(@PathVariable Long id) {
-        Optional<BlogDTO> blogDTO = blogService.findOne(id);
+    @DeleteMapping(value = "/blogs/{id}/clean", params = {"keywords"})
+    public ResponseEntity<Void> cleanBlogEntries(@PathVariable Long id,
+                                                 @RequestParam(value = "keywords") List<String> keywords) {
         Page<EntryDTO> entryDTOS = entryService.findAll(Pageable.unpaged());
-        List<String> keywords = Arrays.asList("Lol", "Rofl", "Omg");
-        if (blogDTO.get().isPositive()) {
-            for (EntryDTO entryDTO: entryDTOS) {
-                if (entryDTO.getBlogId().equals(id)) {
-                    if (entryDTO.getContent().equalsIgnoreCase("Sorry"))
+        for (EntryDTO entryDTO: entryDTOS) {
+            if (entryDTO.getBlogId().equals(id)) {
+                for (String keyword: keywords) {
+                    if (entryDTO.getContent().equalsIgnoreCase(keyword))
                         entryService.delete(entryDTO.getId());
-                }
-            }
-        }
-        else { //blog is negative
-            for (EntryDTO entryDTO: entryDTOS) {
-                if (entryDTO.getBlogId().equals(id)) {
-                    for (String keyword: keywords) {
-                        if (entryDTO.getContent().equalsIgnoreCase(keyword))
-                            entryService.delete(entryDTO.getId());
-                    }
                 }
             }
         }
